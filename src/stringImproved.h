@@ -337,7 +337,7 @@ public:
         for(unsigned int n=0; n<list.size(); n++)
         {
             if (n > 0)
-                ret += " ";
+                ret += *this;
             ret += list[n];
         }
         return ret;
@@ -389,7 +389,26 @@ public:
         old replaced by new.  If the optional argument count is
         given, only the first count occurrences are replaced.
     */
-    string replace(const string old, const string _new, const int count=-1) const;
+    string replace(const string old, const string _new, const int count=-1) const
+    {
+        if (old.length() < 1)
+            return *this;
+        
+        string result;
+        result.reserve(length());
+        int start = 0;
+        int end = 0;
+        for(int amount=0; amount!=count;amount++)
+        {
+            start = find(old, end);
+            if (start < 0)
+                break;
+            result += substr(end, start) + _new;
+            end = start + old.length();
+        }
+        result += substr(end);
+        return result;
+    }
 
     /*
         Return the highest index in S where substring sub is found,
@@ -589,7 +608,7 @@ public:
 
     /* Convert this string to a number */
     float toFloat() { return atof(c_str()); }
-    int toInt() { return atoi(c_str()); }
+    int toInt(int bits_per_digit=10) { return strtol(c_str(), nullptr, bits_per_digit); }
 };
 #undef _WHITESPACE
 

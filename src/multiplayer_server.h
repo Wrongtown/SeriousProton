@@ -31,6 +31,7 @@ class GameServer : public Updatable
     int sendDataCounterPerClient;
     float sendDataRate;
     float sendDataRatePerClient;
+    float update_run_time;
     
     float lastGameSpeed;
     float boardcastServerDelay;
@@ -66,11 +67,13 @@ public:
     virtual void update(float delta);
     inline float getSendDataRate() { return sendDataRate; }
     inline float getSendDataRatePerClient() { return sendDataRatePerClient; }
+    inline float getUpdateTime() { return update_run_time; }
 
     string getServerName() { return server_name; }
     void setServerName(string name) { server_name = name; }
     
     void registerOnMasterServer(string master_server_url);
+    void stopMasterServerRegistry();
     void setPassword(string password);
 
     void gotAudioPacket(int32_t client_id, int32_t target_identifier, std::vector<int16_t>& audio_data);

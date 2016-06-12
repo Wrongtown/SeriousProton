@@ -1,4 +1,5 @@
 #include <string.h>
+#include <cmath>
 
 #include "networkRecorder.h"
 #include "multiplayer.h"
@@ -49,8 +50,8 @@ bool NetworkAudioRecorder::onProcessSamples(const sf::Int16* samples, std::size_
         {
             rms_squared += samples[n] * samples[n];
         }
-        double rms = sqrt(rms_squared / sample_count) / std::numeric_limits<sf::Int16>::max();
-        LOG(INFO) << rms;
+        double rms = std::sqrt(rms_squared / sample_count) / std::numeric_limits<sf::Int16>::max();
+        LOG(INFO) << "Network recorder RMS: " << rms;
     }
     
     if (mode == KeyActivation)

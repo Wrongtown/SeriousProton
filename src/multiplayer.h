@@ -113,7 +113,7 @@ template <> bool multiplayerReplicationFunctions<string>::isChanged(void* data, 
 //I'm assuming that it should be a pure virtual class though.
 class MultiplayerObject : public virtual PObject
 {
-    const static int32_t noId = 0xFFFFFFFF;
+    constexpr static int32_t noId = 0xFFFFFFFF;
     int32_t multiplayerObjectId;
     bool replicated;
     bool on_server;
@@ -210,6 +210,7 @@ public:
     void registerCollisionableReplication(float object_significant_range = -1);
 
     int32_t getMultiplayerId() { return multiplayerObjectId; }
+    const string& getMultiplayerClassIdentifier() { return multiplayerClassIdentifier; }
     void sendClientCommand(sf::Packet& packet);//Send a command from the client to the server.
 
     virtual void onReceiveClientCommand(int32_t client_id, sf::Packet& packet) {} //Got data from a client, handle it.

@@ -45,9 +45,6 @@ GameServer::GameServer(string server_name, int version_number, int listen_port)
 
 GameServer::~GameServer()
 {
-    for(ClientInfo& info : clientList)
-        delete info.socket;
-    
     destroy();
     master_server_update_thread.wait();
 }
@@ -57,6 +54,7 @@ void GameServer::destroy()
     for(ClientInfo& info : clientList)
         delete info.socket;
     clientList.clear();
+    objectMap.clear();
     
     listenSocket.close();
     broadcast_listen_socket.unbind();
@@ -73,6 +71,8 @@ P<MultiplayerObject> GameServer::getObjectById(int32_t id)
 
 void GameServer::update(float gameDelta)
 {
+    sf::Clock update_run_time_clock;    //Clock used to measure how much time this update cycle is costing us.
+    
     //Calculate our own delta, as we want wall-time delta, the gameDelta can be modified by the current game speed (could even be 0 on pause)
     float delta = updateTimeClock.getElapsedTime().asSeconds();
     updateTimeClock.restart();
@@ -302,6 +302,7 @@ void GameServer::update(float gameDelta)
         multiplayer_stats.clear();
     }
 #endif
+    update_run_time = update_run_time_clock.getElapsedTime().asSeconds();
 }
 
 void GameServer::handleNewClient(ClientInfo& info)
@@ -407,6 +408,11 @@ void GameServer::registerOnMasterServer(string master_server_url)
     master_server_update_thread.launch();
 }
 
+void GameServer::stopMasterServerRegistry()
+{
+    this->master_server_url = "";
+}
+
 void GameServer::runMasterServerUpdateThread()
 {
     if (!master_server_url.startswith("http://"))
@@ -427,19 +433,21 @@ void GameServer::runMasterServerUpdateThread()
     LOG(INFO) << "Registering at master server";
     
     sf::Http http(hostname);
-    while(!isDestroyed())
+    while(!isDestroyed() && master_server_url != "")
     {
         sf::Http::Request request(uri, sf::Http::Request::Post);
         request.setBody("port=" + string(listen_port) + "&name=" + server_name + "&version=" + string(version_number));
         
         sf::Http::Response response = http.sendRequest(request, sf::seconds(10.0f));
-        
         if (response.getStatus() != sf::Http::Response::Ok)
         {
             LOG(WARNING) << "Failed to register at master server (" << response.getStatus() << ")";
+        }else if (response.getBody() != "OK")
+        {
+            LOG(WARNING) << "Master server reports error on registering: " << response.getBody();
         }
         
-        for(int n=0;n<60 && !isDestroyed();n++)
+        for(int n=0;n<60 && !isDestroyed() && master_server_url != "";n++)
             sf::sleep(sf::seconds(1.0f));
     }
 }
